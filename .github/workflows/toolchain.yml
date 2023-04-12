@@ -54,6 +54,13 @@ jobs:
         run: |
           chmod +x ./release.sh
           ./release.sh
+          
+      - name: Upload artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: ./toolchain.7z 
     
       - name: Release2
         continue-on-error: true
@@ -61,6 +68,6 @@ jobs:
         with:
           tag_name: ${{ env.short_time }}
           name: toolchain-${{ env.short_time }}
-          files: toolchain.7z
+          files: ./toolchain.7z
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
