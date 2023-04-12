@@ -1,0 +1,50 @@
+name: toolchain
+defaults:
+  run:
+    shell: bash
+on:
+  workflow_dispatch:
+  
+jobs:
+  toolchain:
+    name: Building gcc
+    runs-on: ubuntu-latest
+    steps:    
+      - name: Install Dependencies
+        run: |
+          sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
+          sudo pacman -Syu --noconfirm
+          sudo pacman -S --noconfirm --needed git gyp mercurial subversion ninja cmake ragel yasm nasm asciidoc enca gperf unzip xz gcc-multilib clang python-pip curl lib32-glib2 wget
+          mkdir -p /home/opt/7zip
+          wget -qO - https://www.7-zip.org/a/7z2201-linux-x64.tar.xz | tar -xJf - -C /home/opt/7zip 7zzs
+          sudo ln -s /home/opt/7zip/7zzs /usr/bin/7z
+          pip3 install -U setuptools rst2pdf mako jsonschema meson
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global pull.rebase true
+          git config --global rebase.autoStash true
+          git config --global fetch.prune true
+          
+      - uses: actions/checkout@main         
+      - name: Building toolchain
+        id: build_toolchain
+        run: |
+          PWD=$(pwd)
+          git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
+          echo "commit=$(git -C $PWD/mpv-winbuild-cmake rev-parse --short HEAD)" >> $GITHUB_ENV
+          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -G Ninja -Btoolchain -H$PWD/mpv-winbuild-cmake
+          ninja -C toolchain binutils
+          tar cvf toolchain.tar.xz --use-compress-program='xz -9' toolchain/install
+          
+      - name: Get current time
+        run: |
+          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
+    
+      - name: Release      
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.short_time }}
+          name: toolchain-${{ env.short_time }}
+          files: toolchain/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
