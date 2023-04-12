@@ -48,11 +48,12 @@ jobs:
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
           
       - name: Release1
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          chmod +x ./release-package.sh
-          ./release-package.sh
+          chmod +x ./release.sh
+          ./release.sh
     
       - name: Release2
         continue-on-error: true
