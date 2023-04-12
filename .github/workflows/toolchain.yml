@@ -47,6 +47,6 @@ jobs:
         with:
           tag_name: ${{ env.short_time }}
           name: toolchain-${{ env.short_time }}
-          files: mpv-winbuild-cmake/toolchain.7z
+          files: toolchain.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
