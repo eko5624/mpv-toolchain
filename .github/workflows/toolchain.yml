@@ -46,8 +46,15 @@ jobs:
       - name: Get current time
         run: |
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
+          
+      - name: Release1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x ./release-package.sh
+          ./release-package.sh
     
-      - name: Release
+      - name: Release2
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
