@@ -27,9 +27,14 @@ jobs:
           git config --global rebase.autoStash true
           git config --global fetch.prune true
           
-      - uses: actions/checkout@main         
+      - uses: actions/checkout@main
+      - uses: actions/cache@main
+        id: cache
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/toolchain
+          key: gcc
       - name: Building toolchain
-        id: build_toolchain
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           PWD=$(pwd)
           git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
