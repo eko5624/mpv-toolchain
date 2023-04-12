@@ -34,9 +34,9 @@ jobs:
           PWD=$(pwd)
           git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
           echo "commit=$(git -C $PWD/mpv-winbuild-cmake rev-parse --short HEAD)" >> $GITHUB_ENV
+          cd $PWD/mpv-winbuild-cmake
           cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -G Ninja -Btoolchain -H$PWD/mpv-winbuild-cmake
-          ninja -C toolchain binutils
-          tar cvf toolchain.tar.xz --use-compress-program='xz -9' toolchain/install
+          ninja -C toolchain gcc
           
       - name: Get current time
         run: |
