@@ -67,6 +67,10 @@ jobs:
         run: |
           ninja -C build64 update
           ninja -C build64 mpv
+          
+      - name: Get current time
+        run: |
+          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV          
 
       - name: Packaging mpv
         run: |
@@ -76,10 +80,6 @@ jobs:
           mv mpv-config-main/portable_config release64
           find build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
           7z a mpv-${{ env.short_time }}.7z release64/*
-          
-      - name: Get current time
-        run: |
-          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
     
       - name: Release
         continue-on-error: true
