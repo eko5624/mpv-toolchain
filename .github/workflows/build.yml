@@ -27,46 +27,65 @@ jobs:
           git config --global rebase.autoStash true
           git config --global fetch.prune true
       
-      - uses: actions/checkout@main 
-      - uses: actions/cache@main
-        id: cache
+      - uses: actions/checkout@main
+      
+      - name: Loading build64 cache
+        uses: actions/cache@main
+        id: build64
         with:
-          path: |
-            ${{ github.workspace }}/build64/install
-            ${{ github.workspace }}/build64/install_rustup
-          key: toolchain
-  
-      - name: Building toolchain
-        if: steps.cache.outputs.cache-hit != 'true'
+          path: build64
+          key: build64
+     
+      - name: Loading repository cache
+        uses: actions/cache@main
+        id: src_packages
+        with:
+          path: src_packages
+          
+      - name: Loading rust toolchain cache
+        uses: actions/cache@main
+        id: rust_toolchain
+        with:
+          path: install_rustup
+          key: rust_toolchain
+
+      - name: Downloading source
         run: |
           PWD=$(pwd)
           git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
-          echo "commit=$(git -C $PWD/mpv-winbuild-cmake rev-parse --short HEAD)" >> $GITHUB_ENV
-          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -G Ninja -Bbuild64 -H$PWD/mpv-winbuild-cmake
-          ninja -C build64 gcc
+          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -Bbuild64 -H$PWD/mpv-winbuild-cmake
+          ninja -C build$BIT download || true
+
+      - name: Building toolchain
+        run: |
+          if [[ ! "$(ls -A build64/install/bin)" ]]; then
+            ninja -C build64 gcc
+          fi  
           
       - name: Building mpv
         run: |
+          ninja -C build64 update
           ninja -C build64 mpv
+
+      - name: Packaging mpv
+        run: |
+          mkdir release64
+          curl -OL https://github.com/eko5624/mpv-config/archive/refs/heads/main.zip
+          unzip main.zip
+          mv mpv-config-main/portable_config release64
+          find build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
+          7z a mpv-${{ env.short_time }}.7z release64/*
           
       - name: Get current time
         run: |
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          
-      - name: Release1
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          chmod +x ./release.sh
-          ./release.sh
     
-      - name: Release2
+      - name: Release
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
           tag_name: ${{ env.short_time }}
-          name: mpv-${{ env.short_time }}
-          files: build64/install/mingw/bin/mpv.exe
+          name: ${{ env.short_time }}
+          files: mpv*.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
