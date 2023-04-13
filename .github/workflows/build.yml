@@ -1,4 +1,4 @@
-name: toolchain
+name: build
 defaults:
   run:
     shell: bash
@@ -26,22 +26,28 @@ jobs:
           git config --global pull.rebase true
           git config --global rebase.autoStash true
           git config --global fetch.prune true
-          
-      - uses: actions/checkout@main
+      
+      - uses: actions/checkout@main 
       - uses: actions/cache@main
         id: cache
         with:
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/toolchain
-          key: gcc
+          path: |
+            ${{ github.workspace }}/build64/install
+            ${{ github.workspace }}/build64/install_rustup
+          key: toolchain
+  
       - name: Building toolchain
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           PWD=$(pwd)
           git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
           echo "commit=$(git -C $PWD/mpv-winbuild-cmake rev-parse --short HEAD)" >> $GITHUB_ENV
-          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -G Ninja -Btoolchain -H$PWD/mpv-winbuild-cmake
-          ninja -C toolchain gcc
-          7z a toolchain.7z toolchain/*
+          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -G Ninja -Bbuild64 -H$PWD/mpv-winbuild-cmake
+          ninja -C build64 gcc
+          
+      - name: Building mpv
+        run: |
+          ninja -C build64 mpv
           
       - name: Get current time
         run: |
@@ -54,20 +60,13 @@ jobs:
         run: |
           chmod +x ./release.sh
           ./release.sh
-          
-      - name: Upload artifact
-        continue-on-error: true
-        uses: actions/upload-artifact@v3
-        with:
-          name: my-artifact
-          path: ./toolchain.7z 
     
       - name: Release2
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
           tag_name: ${{ env.short_time }}
-          name: toolchain-${{ env.short_time }}
-          files: ./toolchain.7z
+          name: mpv-${{ env.short_time }}
+          files: build64/install/mingw/bin/mpv.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
