@@ -41,6 +41,7 @@ jobs:
         id: src_packages
         with:
           path: src_packages
+          key: src_packages
           
       - name: Loading rust toolchain cache
         uses: actions/cache@main
