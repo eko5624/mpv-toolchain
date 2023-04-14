@@ -47,20 +47,26 @@ jobs:
           find build64 -name "mpv.exe" -print0 | xargs -0 -I {} ls {}
           7z a mpv-${{ env.short_time }}.7z release64/*
     
-      - name: Release
+      - name: Release1
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
           tag_name: ${{ env.short_time }}
           name: ${{ env.short_time }}
-          files: ./mpv*.7z
+          files: mpv*.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-      - name: Release
+      - name: Release2
         env:
           GH_TOKEN: ${{ github.token }}   
         run: |
           pwd
           chmod +x ./release.sh
-          ./release.sh          
+          ./release.sh
+          
+      - name: Release3
+        uses: actions/upload-artifact@main
+        with:
+          name: my-artifact
+          path: mpv*.7z
