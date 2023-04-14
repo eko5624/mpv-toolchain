@@ -1,4 +1,4 @@
-name: build
+name: release
 defaults:
   run:
     shell: bash
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   
 jobs:
-  toolchain:
+  release:
     name: Building gcc
     runs-on: ubuntu-latest
     container:
