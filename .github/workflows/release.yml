@@ -44,18 +44,7 @@ jobs:
           unzip main.zip
           mv mpv-config-main/portable_config release64
           find build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
-          find build64 -name "mpv.exe" -print0 | xargs -0 -I {} ls {}
           7z a mpv-${{ env.short_time }}.7z release64/*
-    
-      - name: Release1
-        continue-on-error: true
-        uses: softprops/action-gh-release@master
-        with:
-          tag_name: ${{ env.short_time }}
-          name: ${{ env.short_time }}
-          files: mpv*.7z
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Release2
         env:
@@ -64,9 +53,3 @@ jobs:
           pwd
           chmod +x ./release.sh
           ./release.sh
-          
-      - name: Release3
-        uses: actions/upload-artifact@main
-        with:
-          name: my-artifact
-          path: mpv*.7z
