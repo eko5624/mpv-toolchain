@@ -56,3 +56,11 @@ jobs:
           files: ./mpv*.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}   
+        run: |
+          pwd
+          chmod +x ./release.sh
+          ./release.sh          
