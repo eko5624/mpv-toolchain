@@ -31,54 +31,52 @@ jobs:
         uses: actions/cache@main
         id: build64
         with:
-          path: build64
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build64
           key: build64
      
       - name: Loading repository cache
         uses: actions/cache@main
         id: src_packages
         with:
-          path: src_packages
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
           key: src_packages
           
       - name: Loading rust toolchain cache
         uses: actions/cache@main
         id: rust_toolchain
         with:
-          path: install_rustup
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
           key: rust_toolchain
 
-      - name: Downloading source
-        run: |
-          PWD=$(pwd)
-          git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
-          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -Bbuild64 -H$PWD/mpv-winbuild-cmake
-          ninja -C build64 download || true
-
-      - name: Building toolchain
-        run: |
-          if [[ ! "$(ls -A build64/install/bin)" ]]; then
-            ninja -C build64 gcc
-          elif [[ ! "$(ls -A install_rustup/.cargo/bin)" ]]; then
-            ninja rustup-fullclean
-            ninja rustup
-          fi
- 
       - name: Building mpv
         run: |
-          ninja -C build64 update
-          ninja -C build64 mpv-fullclean
-          ninja -C build64 mpv
+          git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
+          cd mpv-winbuild-cmake
+          PWD=$(pwd)
+          srcdir=$(pwd)/src_packages
+          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
+          ninja -C $PWD/build64 download || true
+          if [[ ! "$(ls -A $PWD/build64/install/bin)" ]]; then
+              ninja -C $PWD/build64 gcc
+          elif [[ ! "$(ls -A $PWD/install_rustup/.cargo/bin)" ]]; then
+              ninja -C $PWD/build64 rustup-fullclean
+              ninja -C $PWD/build64 rustup
+          fi
+          ninja -C $PWD/build64 update
+          ninja -C $PWD/build64 mpv-fullclean
+          ninja -C $PWD/build64 mpv
           
-      - name: Collect logs
+      - name: Collecting logs
         if: ${{ always() }}
         run: |
-          sudo 7z a logs.7z $(find build64 -type f -iname "*-*.log" -or -wholename "*/ffbuild/config.log")
+          mkdir build64_logs
+          cp -fr $(find mpv-winbuild-cmake/build64 -type f -iname "*-*.log" -or -wholename "*/ffbuild/config.log") build64_logs || true
+          7z a logs.7z build64_logs
       - name: upload logs
         uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: ${{ matrix.bit }}_logs
+          name: build64_logs
           path: logs.7z
           
       - name: Get current time
@@ -92,8 +90,13 @@ jobs:
           unzip main.zip
           mv mpv-config-main/d3dcompiler_43.dll release64
           mv mpv-config-main/portable_config release64
-          find build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
+          find mpv-winbuild-cmake/build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
           7z a mpv-${{ env.short_time }}.7z release64/*
+          
+      - name: Cleaning rust toolchain directory
+        if: ${{ always() }}
+        run: |
+          ninja -C mpv-winbuild-cmake/build64 cargo-clean
     
       - name: Release
         continue-on-error: true
