@@ -53,7 +53,6 @@ jobs:
           git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
           cd mpv-winbuild-cmake
           PWD=$(pwd)
-          srcdir=$(pwd)/src_packages
           cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
           ninja -C $PWD/build64 download || true
           if [[ ! "$(ls -A $PWD/build64/install/bin)" ]]; then
