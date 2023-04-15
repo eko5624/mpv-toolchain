@@ -34,12 +34,12 @@ jobs:
           path: build64
           key: build64
      
-      #- name: Loading repository cache
-      #  uses: actions/cache@main
-      #  id: src_packages
-      #  with:
-      #    path: src_packages
-      #    key: src_packages
+      - name: Loading repository cache
+        uses: actions/cache@main
+        id: src_packages
+        with:
+          path: src_packages
+          key: src_packages
           
       - name: Loading rust toolchain cache
         uses: actions/cache@main
