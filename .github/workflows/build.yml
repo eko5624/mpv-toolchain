@@ -6,8 +6,7 @@ on:
   workflow_dispatch:
   
 jobs:
-  toolchain:
-    name: Building gcc
+  build:
     runs-on: ubuntu-latest
     container:
       image: archlinux/archlinux:base-devel
@@ -26,7 +25,12 @@ jobs:
           git config --global --add safe.directory $PWD
       
       - uses: actions/checkout@main
-      
+      - name: Checkout toolchain
+        uses: actions/checkout@main
+        with:
+          repository: shinchiro/mpv-winbuild-cmake
+          path: mpv-winbuild-cmake
+
       - name: Loading build64 cache
         uses: actions/cache@main
         id: build64
@@ -50,7 +54,6 @@ jobs:
 
       - name: Building mpv
         run: |
-          git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
           cd mpv-winbuild-cmake
           PWD=$(pwd)
           cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
