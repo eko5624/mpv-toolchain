@@ -71,6 +71,7 @@ jobs:
       - name: Building mpv
         run: |
           ninja -C build64 update
+          ninja -C build64 mpv-fullclean
           ninja -C build64 mpv
           
       - name: Get current time
@@ -82,6 +83,7 @@ jobs:
           mkdir release64
           curl -OL https://github.com/eko5624/mpv-config/archive/refs/heads/main.zip
           unzip main.zip
+          mv mpv-config-main/d3dcompiler_43.dll release64
           mv mpv-config-main/portable_config release64
           find build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
           7z a mpv-${{ env.short_time }}.7z release64/*
