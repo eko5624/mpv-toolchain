@@ -70,6 +70,17 @@ jobs:
           ninja -C build64 mpv-fullclean
           ninja -C build64 mpv
           
+      - name: Collect logs
+        if: ${{ always() }}
+        run: |
+          sudo 7z a logs.7z $(find build64 -type f -iname "*-*.log" -or -wholename "*/ffbuild/config.log")
+      - name: upload logs
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: ${{ matrix.bit }}_logs
+          path: logs.7z
+          
       - name: Get current time
         run: |
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV          
