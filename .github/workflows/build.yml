@@ -34,12 +34,12 @@ jobs:
           path: build64
           key: build64
      
-      - name: Loading repository cache
-        uses: actions/cache@main
-        id: src_packages
-        with:
-          path: src_packages
-          key: src_packages
+      #- name: Loading repository cache
+      #  uses: actions/cache@main
+      #  id: src_packages
+      #  with:
+      #    path: src_packages
+      #    key: src_packages
           
       - name: Loading rust toolchain cache
         uses: actions/cache@main
@@ -54,10 +54,6 @@ jobs:
           git clone --depth 1 https://github.com/shinchiro/mpv-winbuild-cmake.git
           cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -Bbuild64 -H$PWD/mpv-winbuild-cmake
           ninja -C build64 download || true
-          cd mpv-winbuild-cmake
-          if [[ "$(ls -A ../patch/*.patch)" ]]; then
-            git am --3way ../patch/*.patch
-          fi
 
       - name: Building toolchain
         run: |
