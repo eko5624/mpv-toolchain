@@ -32,26 +32,29 @@ jobs:
           path: mpv-winbuild-cmake
 
       - name: Loading build64 cache
-        uses: actions/cache@main
-        id: build64
+        uses: actions/cache/restore@main
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build64
-          key: build64
+          key: build64-${{ github.run_id }}
+          restore-keys: |
+            build64
      
       - name: Loading repository cache
-        uses: actions/cache@main
-        id: src_packages
+        uses: actions/cache/restore@main
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
-          key: src_packages
-          
+          key: repository-${{ github.run_id }}
+          restore-keys: |
+            repository
+            
       - name: Loading rust toolchain cache
-        uses: actions/cache@main
-        id: rust_toolchain
+        uses: actions/cache/restore@main
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
-          key: rust_toolchain
-
+          key: rust_toolchain-${{ github.run_id }}
+          restore-keys: |
+            rust_toolchain
+            
       - name: Building mpv
         run: |
           cd mpv-winbuild-cmake
@@ -65,8 +68,21 @@ jobs:
               ninja -C $PWD/build64 rustup
           fi
           ninja -C $PWD/build64 update
-          ninja -C $PWD/build64 mpv-fullclean
           ninja -C $PWD/build64 mpv
+          
+      - name: Get current time
+        run: |
+          echo "short_time=$(date "+%Y%m%d")" >> $GITHUB_ENV          
+
+      - name: Packaging mpv
+        run: |
+          mkdir release64
+          curl -OL https://github.com/eko5624/mpv-config/archive/refs/heads/main.zip
+          unzip main.zip
+          mv mpv-config-main/d3dcompiler_43.dll release64
+          mv mpv-config-main/portable_config release64
+          find mpv-winbuild-cmake/build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
+          7z a mpv-${{ env.short_time }}.7z release64/*
           
       - name: Collecting logs
         if: ${{ always() }}
@@ -81,24 +97,36 @@ jobs:
           name: build64_logs
           path: logs.7z
           
-      - name: Get current time
+      - name: Cleaning build directory
+        if: always()
         run: |
-          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV          
-
-      - name: Packaging mpv
-        run: |
-          mkdir release64
-          curl -OL https://github.com/eko5624/mpv-config/archive/refs/heads/main.zip
-          unzip main.zip
-          mv mpv-config-main/d3dcompiler_43.dll release64
-          mv mpv-config-main/portable_config release64
-          find mpv-winbuild-cmake/build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
-          7z a mpv-${{ env.short_time }}.7z release64/*
+          rm -rf mpv-winbuild-cmake/build64/mpv*
           
       - name: Cleaning rust toolchain directory
         if: ${{ always() }}
         run: |
           ninja -C mpv-winbuild-cmake/build64 cargo-clean
+          
+      - name: Saving build64 cache
+        uses: actions/cache/save@main
+        if: always()
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build64
+          key: build64-${{ github.run_id }}
+
+      - name: Saving repository cache
+        uses: actions/cache/save@main
+        if: always()
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
+          key: repository-${{ github.run_id }}
+
+      - name: Saving rust toolchain cache
+        uses: actions/cache/save@main
+        if: always()
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
+          key: rust_toolchain-${{ github.run_id }}
     
       - name: Release
         continue-on-error: true
