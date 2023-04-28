@@ -26,34 +26,33 @@ jobs:
           git config --global --add safe.directory $PWD
       
       - uses: actions/checkout@main
-      
-      - name: Loading build64 cache
-        uses: actions/cache@main
-        id: build64
+      - name: Checkout toolchain
+        uses: actions/checkout@main
         with:
-          path: build64
-          key: build64
+          repository: shinchiro/mpv-winbuild-cmake
+          path: mpv-winbuild-cmake
+      
+      - name: Loading rust toolchain cache
+        uses: actions/cache/restore@main
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
+          key: rust_toolchain-${{ github.run_id }}
+          restore-keys: |
+            rust_toolchain
           
       - name: Get current time
         run: |
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV          
-      - name: Packaging mpv
+      - name: Get rustup toolchain
         run: |
-          #mkdir release64
-          #curl -OL https://github.com/eko5624/mpv-config/archive/refs/heads/main.zip
-          #unzip main.zip
-          #mv mpv-config-main/portable_config release64
-          #find build64 -name "mpv.exe" -print0 | xargs -0 -I {} cp {} release64
-          #find build64 -name "mpv.exe" -print0 | xargs -0 -I {} ls {}
-          #7z a mpv-${{ env.short_time }}.7z release64/*
-          7z a build64-dir.7z build64/*
+          7z a install_rustup.7z mpv-winbuild-cmake/install_rustup/*
           
-      - name: Release build64
+      - name: Release
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
           tag_name: ${{ env.short_time }}
           name: ${{ env.short_time }}
-          files: build64-dir.7z
+          files: install_rustup.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
