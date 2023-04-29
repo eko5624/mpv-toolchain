@@ -31,6 +31,14 @@ jobs:
         with:
           repository: shinchiro/mpv-winbuild-cmake
           path: mpv-winbuild-cmake
+          
+      - name: Loading build64 cache
+        uses: actions/cache/restore@main
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build64
+          key: build64-${{ github.run_id }}
+          restore-keys: |
+            build64
       
       - name: Loading rust toolchain cache
         uses: actions/cache/restore@main
@@ -43,9 +51,9 @@ jobs:
       - name: Get current time
         run: |
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV          
-      - name: Get rustup toolchain
+      - name: Get gcc toolchain
         run: |
-          7z a install_rustup.7z mpv-winbuild-cmake/install_rustup/*
+          7z a gcc.7z mpv-winbuild-cmake/build64/*
           
       - name: Release
         continue-on-error: true
@@ -53,6 +61,6 @@ jobs:
         with:
           tag_name: ${{ env.short_time }}
           name: ${{ env.short_time }}
-          files: install_rustup.7z
+          files: gcc.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
