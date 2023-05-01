@@ -38,14 +38,6 @@ jobs:
           key: build64-${{ github.run_id }}
           restore-keys: |
             build64
-     
-      - name: Loading repository cache
-        uses: actions/cache/restore@main
-        with:
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
-          key: repository-${{ github.run_id }}
-          restore-keys: |
-            repository
             
       - name: Loading rust toolchain cache
         uses: actions/cache/restore@main
@@ -102,13 +94,6 @@ jobs:
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build64
           key: build64-${{ github.run_id }}
-
-      - name: Saving repository cache
-        uses: actions/cache/save@main
-        if: always()
-        with:
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
-          key: repository-${{ github.run_id }}
 
       - name: Saving rust toolchain cache
         uses: actions/cache/save@main
