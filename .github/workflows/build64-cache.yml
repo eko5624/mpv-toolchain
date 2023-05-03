@@ -47,13 +47,10 @@ jobs:
           key: rust_toolchain-${{ github.run_id }}
           restore-keys: |
             rust_toolchain
-          
-      - name: Get current time
-        run: |
-          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV          
+                   
       - name: Get gcc toolchain
         run: |
-          7z a gcc.7z mpv-winbuild-cmake/build64/*
+          7z a cache-build64.7z mpv-winbuild-cmake/build64/*
           
       - name: Release
         continue-on-error: true
@@ -61,6 +58,6 @@ jobs:
         with:
           tag_name: ${{ env.short_time }}
           name: ${{ env.short_time }}
-          files: gcc.7z
+          files: cache*.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
