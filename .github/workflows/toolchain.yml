@@ -58,15 +58,11 @@ jobs:
           elif [[ ! "$(ls -A $PWD/install_rustup/.cargo/bin)" ]]; then
               ninja -C $PWD/build64 rustup-fullclean
               ninja -C $PWD/build64 rustup
-          fi
-          
-      - name: Get current time
-        run: |
-          echo "short_time=$(date "+%Y%m%d")" >> $GITHUB_ENV          
+          fi        
 
-      - name: Packaging gcc-toolchain
+      - name: Packaging gcc toolchain
         run: |
-          7z a gcc.7z mpv-winbuild-cmake/build64/install/*
+          7z a shinchiro-gcc-12-20230401.7z mpv-winbuild-cmake/build64/install/*
           
       - name: Release
         continue-on-error: true
@@ -74,7 +70,7 @@ jobs:
         with:
           tag_name: ${{ env.short_time }}
           name: ${{ env.short_time }}
-          files: gcc.7z
+          files: shinchiro-gcc*.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
