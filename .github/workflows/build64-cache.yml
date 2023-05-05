@@ -7,7 +7,6 @@ on:
   
 jobs:
   release:
-    name: Building gcc
     runs-on: ubuntu-latest
     container:
       image: archlinux/archlinux:base-devel
@@ -47,7 +46,7 @@ jobs:
           restore-keys: |
             rust_toolchain
                    
-      - name: Get gcc toolchain
+      - name: Get build64 cache
         run: |
           7z a cache-build64.7z mpv-winbuild-cmake/build64/*
           
