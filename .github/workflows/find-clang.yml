@@ -54,8 +54,8 @@ jobs:
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
-          tag_name: ${{ env.short_time }}
-          name: ${{ env.short_time }}
+          tag_name: toolchain
+          name: toolchain
           files: clang.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
