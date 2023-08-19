@@ -44,4 +44,5 @@ jobs:
         run: |
           find . -name "clang++"
           find . -name "llvm-objcopy"
+          find . -name "x86_64-w64-mingw32-ld"
             
