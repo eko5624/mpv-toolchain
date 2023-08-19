@@ -46,3 +46,17 @@ jobs:
           find . -name "llvm-objcopy"
           find . -name "x86_64-w64-mingw32-ld"
             
+      - name: Packaging gcc toolchain
+        run: |
+          7z a clang.7z mpv-winbuild-cmake/build64/*
+          
+      - name: Release
+        continue-on-error: true
+        uses: softprops/action-gh-release@master
+        with:
+          tag_name: ${{ env.short_time }}
+          name: ${{ env.short_time }}
+          files: clang.7z
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
