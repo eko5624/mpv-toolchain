@@ -1,0 +1,45 @@
+name: clang
+defaults:
+  run:
+    shell: bash
+on:
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux/archlinux:base-devel
+    steps:    
+      - name: Install Dependencies
+        run: |
+          sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
+          sudo pacman -Syu --noconfirm
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global pull.rebase true
+          git config --global rebase.autoStash true
+          git config --global fetch.prune true
+          git config --global --add safe.directory $PWD
+      
+      - uses: actions/checkout@main
+      - name: Checkout toolchain
+        uses: actions/checkout@main
+        with:
+          repository: shinchiro/mpv-winbuild-cmake
+          ref: clang
+          path: mpv-winbuild-cmake
+
+      - name: Loading build64 cache
+        uses: actions/cache/restore@main
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build64
+          key: build64-${{ github.run_id }}
+          restore-keys: |
+            build64
+
+      - name: Finding clang
+        run: |
+          cd mpv-winbuild-cmake
+          find . -name "clang++"
+            
