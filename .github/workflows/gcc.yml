@@ -1,4 +1,4 @@
-name: toolchain
+name: gcc
 defaults:
   run:
     shell: bash
