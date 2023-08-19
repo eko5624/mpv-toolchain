@@ -42,7 +42,6 @@ jobs:
 
       - name: Finding clang
         run: |
-          cd
           find . -name "clang++"
           find . -name "x86_64-w64-mingw32-clang++"
             
