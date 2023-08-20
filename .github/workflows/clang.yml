@@ -53,8 +53,12 @@ jobs:
           cd mpv-winbuild-cmake
           PWD=$(pwd)
           cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DCOMPILER_TOOLCHAIN=clang -DCMAKE_INSTALL_PREFIX=$PWD/clang_root -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
-          ninja -C $PWD/build64 llvm && ninja -C $PWD/build64 llvm-clang
-          ninja -C $PWD/build64 rustup
+          if [[ ! "$(ls -A $PWD/clang_root/bin/clang)" ]]; then
+              ninja -C $PWD/build64 llvm && ninja -C $PWD/build64 llvm-clang
+          elif [[ ! "$(ls -A $PWD/install_rustup/.cargo/bin)" ]]; then
+              ninja -C $PWD/build64 rustup-fullclean
+              ninja -C $PWD/build64 rustup
+          fi 
 
 
       - name: Packaging toolchain
