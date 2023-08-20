@@ -32,13 +32,13 @@ jobs:
           ref: clang
           path: mpv-winbuild-cmake
 
-      - name: Loading build64 cache
+      - name: Loading clang cache
         uses: actions/cache/restore@main
         with:
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/build64
-          key: build64-${{ github.run_id }}
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/clang_root
+          key: clang-${{ github.run_id }}
           restore-keys: |
-            build64
+            clang-
             
       - name: Loading rust toolchain cache
         uses: actions/cache/restore@main
@@ -46,51 +46,77 @@ jobs:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
           key: rust_toolchain-${{ github.run_id }}
           restore-keys: |
-            rust_toolchain
+            rust_toolchain-
             
-      - name: Building toolchain
+      - name: Building clang
         run: |
           cd mpv-winbuild-cmake
           PWD=$(pwd)
           cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DCOMPILER_TOOLCHAIN=clang -DCMAKE_INSTALL_PREFIX=$PWD/clang_root -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
           ninja -C $PWD/build64 download || true
-          if [[ ! "$(ls -A $PWD/build64/clang_root/bin)" ]]; then
+          if [[ ! "$(ls -A $PWD/clang_root/bin)" ]]; then
               ninja -C $PWD/build64 llvm && ninja -C $PWD/build64 llvm-clang
           elif [[ ! "$(ls -A $PWD/install_rustup/.cargo/bin)" ]]; then
-              ninja -C $PWD/build64 rustup-fullclean
               ninja -C $PWD/build64 rustup
-          fi        
+          fi 
 
-      - name: Packaging gcc toolchain
+      - name: Building clang toolchain
         run: |
-          7z a clang.7z mpv-winbuild-cmake/build64/clang_root/*
+          cd mpv-winbuild-cmake
+          PWD=$(pwd)
+          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DCOMPILER_TOOLCHAIN=clang -DCMAKE_INSTALL_PREFIX=$PWD/clang_root -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
+          ninja -C $PWD/build64 download || true
+          if [[ ! "$(ls -A $PWD/clang_root/bin)" ]]; then
+              ninja -C $PWD/build64 llvm && ninja -C $PWD/build64 llvm-clang
+          fi
+
+      - name: Building rustup toolchain
+        continue-on-error: true
+        run: |
+          cd mpv-winbuild-cmake
+          PWD=$(pwd)
+          cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DCOMPILER_TOOLCHAIN=clang -DCMAKE_INSTALL_PREFIX=$PWD/clang_root -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
+          ninja -C $PWD/build64 download || true
+          if [[ ! "$(ls -A $PWD/install_rustup/.cargo/bin)" ]]; then
+              ninja -C $PWD/build64 rustup
+          fi
+
+      - name: Packaging toolchain
+        run: |
+          7z a clang.7z mpv-winbuild-cmake/clang_root/*
+          7z a rustup.7z mpv-winbuild-cmake/install_rustup/*
           
-      - name: Release
+      - name: Release clang
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
-          tag_name: ${{ env.short_time }}
-          name: ${{ env.short_time }}
+          tag_name: toolchain
+          name: toolchain
           files: clang.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Cleaning build directory
-        if: always()
-        run: |
-          rm -rf mpv-winbuild-cmake/build64/mpv*
+
+      - name: Release rustup
+        continue-on-error: true
+        uses: softprops/action-gh-release@master
+        with:
+          tag_name: toolchain
+          name: toolchain
+          files: rustup.7z
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Cleaning rust toolchain directory
         if: ${{ always() }}
         run: |
           ninja -C mpv-winbuild-cmake/build64 cargo-clean
           
-      - name: Saving build64 cache
+      - name: Saving clang cache
         uses: actions/cache/save@main
         if: always()
         with:
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/build64
-          key: build64-${{ github.run_id }}
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/clang_root
+          key: clang-${{ github.run_id }}
 
       - name: Saving rust toolchain cache
         uses: actions/cache/save@main
