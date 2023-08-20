@@ -52,7 +52,6 @@ jobs:
           cd mpv-winbuild-cmake
           PWD=$(pwd)
           cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
-          ninja -C $PWD/build64 download || true
           if [[ ! "$(ls -A $PWD/build64/install/bin)" ]]; then
               ninja -C $PWD/build64 gcc
           elif [[ ! "$(ls -A $PWD/install_rustup/.cargo/bin)" ]]; then
@@ -62,15 +61,15 @@ jobs:
 
       - name: Packaging gcc toolchain
         run: |
-          7z a shinchiro-gcc-12-20230401.7z mpv-winbuild-cmake/build64/install/*
+          7z a gcc.7z mpv-winbuild-cmake/build64/install/*
           
       - name: Release
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
-          tag_name: ${{ env.short_time }}
-          name: ${{ env.short_time }}
-          files: shinchiro-gcc*.7z
+          tag_name: toolchain
+          name: toolchain
+          files: gcc.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
