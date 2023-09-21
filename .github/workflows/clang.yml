@@ -55,11 +55,11 @@ jobs:
           cmake -DTARGET_ARCH=x86_64-w64-mingw32 -DCOMPILER_TOOLCHAIN=clang -DCMAKE_INSTALL_PREFIX=$PWD/clang_root -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/install_rustup -G Ninja -H$PWD -B$PWD/build64
           if [[ ! "$(ls -A $PWD/clang_root/bin/clang)" ]]; then
               ninja -C $PWD/build64 llvm && ninja -C $PWD/build64 llvm-clang
-          elif [[ ! "$(ls -A $PWD/install_rustup/.cargo/bin)" ]]; then
+          fi    
+          if [[ ! "$(ls -A $PWD/install_rustup/.cargo/bin)" ]]; then
               ninja -C $PWD/build64 rustup-fullclean
               ninja -C $PWD/build64 rustup
           fi 
-
 
       - name: Packaging toolchain
         run: |
@@ -67,9 +67,9 @@ jobs:
           7z a rustup.7z mpv-winbuild-cmake/install_rustup/*
 
 
-      - name: Packaging src_packages
+      - name: Packaging build64
         run: |
-          7z a src_packages.7z mpv-winbuild-cmake/src_packages/*
+          7z a build64.7z mpv-winbuild-cmake/build64/*
           
       - name: Release clang
         continue-on-error: true
@@ -91,13 +91,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Release src_packages
+      - name: Release build64
         continue-on-error: true
         uses: softprops/action-gh-release@master
         with:
           tag_name: toolchain
           name: toolchain
-          files: src_packages.7z
+          files: build64.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
@@ -106,16 +106,16 @@ jobs:
         run: |
           ninja -C mpv-winbuild-cmake/build64 cargo-clean
 
+      - name: Saving clang toolchain cache
+        uses: actions/cache/save@main
+        if: always()
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/clang_root
+          key: clang-${{ github.run_id }}
+          
       - name: Saving rust toolchain cache
         uses: actions/cache/save@main
         if: always()
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
-          key: rust_toolchain-${{ github.run_id }}
-
-      - name: Saving src_packages
-        uses: actions/cache/save@main
-        if: always()
-        with:
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
           key: rust_toolchain-${{ github.run_id }}
