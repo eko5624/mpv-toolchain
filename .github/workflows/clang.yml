@@ -65,6 +65,11 @@ jobs:
         run: |
           7z a clang.7z mpv-winbuild-cmake/clang_root/*
           7z a rustup.7z mpv-winbuild-cmake/install_rustup/*
+
+
+      - name: Packaging src_packages
+        run: |
+          7z a src_packages.7z mpv-winbuild-cmake/src_packages/*
           
       - name: Release clang
         continue-on-error: true
@@ -85,18 +90,21 @@ jobs:
           files: rustup.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release src_packages
+        continue-on-error: true
+        uses: softprops/action-gh-release@master
+        with:
+          tag_name: toolchain
+          name: toolchain
+          files: src_packages.7z
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Cleaning rust toolchain directory
         if: ${{ always() }}
         run: |
           ninja -C mpv-winbuild-cmake/build64 cargo-clean
-          
-      - name: Saving clang cache
-        uses: actions/cache/save@main
-        if: always()
-        with:
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/clang_root
-          key: clang-${{ github.run_id }}
 
       - name: Saving rust toolchain cache
         uses: actions/cache/save@main
@@ -104,4 +112,10 @@ jobs:
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
           key: rust_toolchain-${{ github.run_id }}
-  
+
+      - name: Saving src_packages
+        uses: actions/cache/save@main
+        if: always()
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
+          key: rust_toolchain-${{ github.run_id }}
