@@ -15,7 +15,7 @@ jobs:
         run: |
           sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
           sudo pacman -Syu --noconfirm
-          sudo pacman -S --noconfirm --needed git ninja cmake yasm nasm unzip p7zip python-pip python-cairo curl jq wget
+          sudo pacman -S --noconfirm --needed git ninja cmake yasm nasm clang lld libc++ libc++abi unzip p7zip python-pip python-cairo curl jq wget
           pip3 install -U --break-system-packages setuptools rst2pdf mako jsonschema meson
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
